@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models import Model, DateTimeField
-from django.forms import CharField
+from django.db.models.fields import CharField
 from django.utils.translation import ugettext_lazy as _
 
 
