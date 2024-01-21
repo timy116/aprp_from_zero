@@ -1,17 +1,140 @@
 from django.db import models
-from django.db.models import Model, DateTimeField
-from django.db.models.fields import CharField, IntegerField
+from django.db.models import Model, DateTimeField, ManyToManyField, ForeignKey, SET_NULL, Q
+from django.db.models.fields import CharField, IntegerField, BooleanField
 from django.utils.translation import ugettext_lazy as _
+from model_utils.managers import InheritanceManager
+
+
+class AbstractProduct(Model):
+    name = CharField(max_length=50, verbose_name=_('Name'))
+    code = CharField(max_length=50, verbose_name=_('Code'))
+    config = ForeignKey('configs.Config', null=True, on_delete=SET_NULL, verbose_name=_('Config'))
+    type = ForeignKey('configs.Type', null=True, on_delete=SET_NULL, verbose_name=_('Type'))
+    unit = ForeignKey('configs.Unit', null=True, blank=True, verbose_name=_('Unit'))
+    parent = ForeignKey('self', null=True, blank=True, on_delete=SET_NULL, verbose_name=_('Parent'))
+    track_item = BooleanField(default=True, verbose_name=_('Track Item'))
+    update_time = DateTimeField(auto_now=True, null=True, blank=True, verbose_name=_('Updated'))
+
+    objects = InheritanceManager()
+
+    class Meta:
+        verbose_name = _('Abstract Product')
+        verbose_name_plural = _('Abstract Products')
+        ordering = ('id',)
+
+    def __str__(self):
+        return str(self.name)
+
+    def __unicode__(self):
+        return str(self.name)
+
+    @property
+    def to_direct(self):
+        """
+        set true to navigate at front end
+        """
+        type_level = self.config.type_level
+        return self.level >= type_level
+
+    @property
+    def level(self):
+        level = 1
+
+        lock = False
+        product = self
+
+        while not lock:
+
+            if product.parent is not None:
+                product = product.parent
+                level = level + 1
+            else:
+                lock = True
+
+        return level
+
+    def children_all(self):
+        q_object = Q()
+        parent_attr = 'parent'
+        for _ in range(5):
+            q_object |= Q(**{parent_attr: self})
+            parent_attr += '__parent'
+
+        return AbstractProduct.objects.filter(q_object).select_subclasses().order_by('id')
+
+
+class SourceQuerySet(models.QuerySet):
+    """ for case like Source.objects.filter(config=config).filter_by_name(name) """
+
+    def filter_by_name(self, name):
+        if not isinstance(name, str):
+            raise TypeError('Name must be a string')
+
+        name = name.replace('台', '臺')
+        qs = self.filter(name=name)
+
+        if not qs:
+            qs = self.filter(alias__icontains=name)
+
+        return qs
+
+
+class Source(Model):
+    """
+    單一市場須定義產品種類(Config)及供應種類(Type)，初始化市場資料名稱統一使用臺字。
+    """
+    name = CharField(max_length=50, verbose_name=_('Name'))
+    alias = CharField(max_length=255, null=True, blank=True, verbose_name=_('Alias'))
+    code = CharField(max_length=50, null=True, blank=True, verbose_name=_('Code'))
+    configs = ManyToManyField('configs.Config', verbose_name=_('Config'))
+    type = ForeignKey('configs.Type', null=True, blank=True, on_delete=SET_NULL, verbose_name=_('Type'))
+    enable = BooleanField(default=True, verbose_name=_('Enable'))
+    update_time = DateTimeField(auto_now=True, null=True, blank=True, verbose_name=_('Updated'))
+
+    objects = SourceQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = _('Source')
+        verbose_name_plural = _('Sources')
+        ordering = ['id']
+
+    def __str__(self):
+        flat = self.configs_flat
+        return f'{self.name} ({flat}-{self.type.name})'
+
+    def __unicode__(self):
+        flat = self.configs_flat
+        return f'{self.name} ({flat}- {self.type.name})'
+
+    @property
+    def simple_name(self):
+        return self.name.replace('臺', '台')
+
+    @property
+    def configs_flat(self):
+        return ', '.join([config.name for config in self.configs.all()])
+
+    @property
+    def to_direct(self):
+        """
+        set true to navigate at front end
+        """
+        return True
 
 
 class Config(Model):
     """
     產品種類，目前初始化有 crop, fruit, rice...等12種，
     有各自代表的 app(crops, fruits, rices)，也是網頁選單的第一層物件。
+
+    e.g.
+    type_level: 在產生選單時，決定 type 要出現在哪一層，預設為 1
+    type_level = 1: config -> product -> type -> product -> source
+    type_level = 2: config -> product -> product -> type -> product -> source
     """
     name = CharField(max_length=50, unique=True, verbose_name=_('Name'))
     code = CharField(max_length=50, null=True, blank=True, verbose_name=_('Code'))
-    charts = models.ManyToManyField('configs.Chart', blank=True, verbose_name=_('Charts'))
+    charts = models.ManyToManyField('configs.Chart', blank=True, verbose_name=_('Chart'))
     type_level = IntegerField(choices=[(1, 1), (2, 2)], default=1, verbose_name=_('Type Level'))
     update_time = DateTimeField(auto_now=True, null=True, blank=True, verbose_name=_('Updated'))
 
@@ -68,11 +191,8 @@ class Type(Model):
         return True
 
     def sources(self):
-        """
-        取得特定供應種類的市場
-        :return:
-        """
-        pass
+        """取得特定供應種類的市場"""
+        return Source.objects.filter(type=self)
 
 
 class Unit(Model):
