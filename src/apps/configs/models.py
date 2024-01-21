@@ -100,11 +100,11 @@ class Source(Model):
 
     def __str__(self):
         flat = self.configs_flat
-        return f'{self.name} ({flat}-{self.type.name})'
+        return f'{self.name}({flat}-{self.type.name})'
 
     def __unicode__(self):
         flat = self.configs_flat
-        return f'{self.name} ({flat}- {self.type.name})'
+        return f'{self.name}({flat}-{self.type.name})'
 
     @property
     def simple_name(self):
@@ -112,7 +112,7 @@ class Source(Model):
 
     @property
     def configs_flat(self):
-        return ', '.join([config.name for config in self.configs.all()])
+        return ','.join([config.name for config in self.configs.all()])
 
     @property
     def to_direct(self):
