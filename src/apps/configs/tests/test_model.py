@@ -1,6 +1,8 @@
 import pytest
-from apps.configs.models import Unit
+from django.db.utils import IntegrityError
 from django.utils import timezone
+
+from apps.configs.models import Unit, Type, Source
 
 
 # Test __str__ method
@@ -51,3 +53,79 @@ def test_unit_attr_list_method(price_unit, volume_unit, weight_unit, expected_li
 
     # Assert
     assert result == expected_list
+
+
+@pytest.mark.django_db
+class TestTypeModel:
+    # Test __str__ method happy path
+    @pytest.mark.parametrize(
+        "type_name, expected_str",
+        [
+            ("Type A", "Type A"),
+            ("Type B", "Type B"),
+            ("", ""),  # Assuming empty string is a valid type name
+        ]
+    )
+    def test_type_str(self, type_name, expected_str):
+        # Arrange
+        type_instance = Type.objects.create(name=type_name)
+
+        # Act
+        result = str(type_instance)
+
+        # Assert
+        assert result == expected_str
+
+    # Test sources method happy path
+    @pytest.mark.parametrize(
+        "type_name, source_count, expected_count",
+        [
+            ("Type A", 3, 3),
+            ("Type B", 0, 0),  # No sources for this type
+        ]
+    )
+    def test_type_sources(self, type_name, source_count, expected_count):
+        # Arrange
+        type_instance = Type.objects.create(name=type_name)
+        for _ in range(source_count):
+            Source.objects.create(type=type_instance)
+
+        # Act
+        result = type_instance.sources()
+
+        # Assert
+        assert result.count() == expected_count
+
+    # Test to_direct property happy path
+    @pytest.mark.parametrize(
+        "type_name, expected_value",
+        [
+            ("Type A", True),
+            ("Type B", True),
+        ]
+    )
+    def test_type_to_direct(self, type_name, expected_value):
+        # Arrange
+        type_instance = Type.objects.create(name=type_name)
+
+        # Act
+        result = type_instance.to_direct
+
+        # Assert
+        assert result is expected_value
+
+    # Test unique constraint on name field error case
+    @pytest.mark.parametrize(
+        "type_name",
+        [
+            ("Type A",),
+            ("Type B",),
+        ]
+    )
+    def test_type_name_unique_constraint(self, type_name):
+        # Arrange
+        Type.objects.create(name=type_name)
+
+        # Act / Assert
+        with pytest.raises(IntegrityError):
+            Type.objects.create(name=type_name)
