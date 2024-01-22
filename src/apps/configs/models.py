@@ -155,6 +155,14 @@ class Config(Model):
         """
         return False
 
+    def products(self):
+        return AbstractProduct.objects.filter(config=self).select_subclasses().order_by('id')
+
+    def types(self):
+        products_qs = self.products().values('type').distinct()
+        types_ids = [product['type'] for product in products_qs]
+        return Type.objects.filter(id__in=types_ids)
+
 
 class TypeQuerySet(models.QuerySet):
     """

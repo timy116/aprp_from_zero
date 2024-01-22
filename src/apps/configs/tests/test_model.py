@@ -2,7 +2,7 @@ import pytest
 from django.db.utils import IntegrityError
 from django.utils import timezone
 
-from apps.configs.models import Unit, Type, Source, Config
+from apps.configs.models import Unit, Type, Source, Config, AbstractProduct
 
 
 # Test __str__ method
@@ -237,3 +237,65 @@ def test_filter_by_name_error_cases(input_name, exception):
     # Act & Assert
     with pytest.raises(exception):
         Source.objects.filter_by_name(input_name)
+
+
+@pytest.mark.django_db
+class TestConfigModel:
+    # Happy path test for __str__ method
+    @pytest.mark.parametrize(
+        "test_id, name, code, expected_str",
+        [
+            ("HP-1", "Config1", "C1", "Config1"),  # ID: HP-1
+            ("HP-2", "Config2", None, "Config2"),  # ID: HP-2
+        ],
+    )
+    def test_str_method(self, test_id, name, code, expected_str):
+        # Arrange
+        config = Config.objects.create(name=name, code=code)
+
+        # Act
+        result = str(config)
+
+        # Assert
+        assert result == expected_str
+
+    # Happy path test for products method
+    @pytest.mark.parametrize(
+        "test_id, config_name, product_count, expected_count",
+        [
+            ("HP-1", "Config1", 3, 3),  # ID: HP-1
+            ("HP-2", "Config2", 0, 0),  # ID: HP-2
+        ],
+    )
+    def test_products(self, test_id, config_name, product_count, expected_count):
+        # Arrange
+        config = Config.objects.create(name=config_name)
+        for _ in range(product_count):
+            AbstractProduct.objects.create(config=config)
+
+        # Act
+        products = config.products()
+
+        # Assert
+        assert products.count() == expected_count
+
+    # Happy path test for types method
+    @pytest.mark.parametrize(
+        "test_id, config_name, type_name, type_count, expected_types",
+        [
+            ("HP-1", "Config1", "Type", 3, [1, 2, 3]),  # ID: HP-1
+            ("HP-2", "Config2", "Type", 2, [1, 2]),  # ID: HP-2
+        ],
+    )
+    def test_types(self, test_id, config_name, type_name, type_count, expected_types):
+        # Arrange
+        config = Config.objects.create(name=config_name)
+        for count in range(type_count):
+            type_instance = Type.objects.create(name=f"{type_name}{count}")
+            AbstractProduct.objects.create(config=config, type=type_instance)
+
+        # Act
+        types = config.types()
+
+        # Assert
+        assert list(types.values_list('id', flat=True)) == expected_types
