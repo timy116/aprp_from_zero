@@ -324,7 +324,7 @@ class FestivalItems(Model):
     product_id = ManyToManyField('configs.AbstractProduct', verbose_name=_('Product ID'))
     source = ManyToManyField('configs.Source', verbose_name=_('Source'))
     update_time = DateTimeField(auto_now=True, null=True, blank=True, verbose_name=_('Updated'))
-    created_time = DateTimeField(auto_now_add=True, null=True, blank=True, verbose_name=_('Created'))
+    create_time = DateTimeField(auto_now_add=True, null=True, blank=True, verbose_name=_('Created'))
 
     class Meta:
         verbose_name = _('Festal Item')

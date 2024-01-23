@@ -10,6 +10,7 @@ from apps.configs.models import (
     AbstractProduct,
     FestivalName,
     Festival,
+    FestivalItems,
 )
 
 
@@ -379,3 +380,41 @@ def test_festival_str(roc_year, festival_name, enable, expected_str):
     # Assert
     if not isinstance(expected_str, type):
         assert result_str == expected_str
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "test_id, name, enable, order_sn, festival_name, product_id, source, expected_str",
+    [
+        # Happy path tests
+        ("happy-1", "Item1", True, 1, [], [], [], "Item1"),
+        ("happy-2", "Item2", False, 2, [1], [1], [1], "Item2"),
+        ("happy-3", "Item3", True, 3, [1, 2], [1, 2], [1, 2], "Item3"),
+
+        # Edge cases
+        ("edge-1", "A" * 20, True, 9, [], [], [], "A" * 20),  # Max length name
+    ]
+)
+def test_festival_items_creation(test_id, name, enable, order_sn, festival_name, product_id, source, expected_str):
+    # Arrange
+    festival_name_instances = [FestivalName.objects.create(name=f"Festival {n}") for n in festival_name]
+    product_id_instances = [AbstractProduct.objects.create(name=f"Product {p}") for p in product_id]
+    source_instances = [Source.objects.create(name=f"Source {s}") for s in source]
+    festival_item = FestivalItems.objects.create(
+        name=name,
+        enable=enable,
+        order_sn=order_sn
+    )
+    festival_item.festival_name.set(festival_name_instances)
+    festival_item.product_id.set(product_id_instances)
+    festival_item.source.set(source_instances)
+
+    # Assert
+    assert str(festival_item) == expected_str
+    assert festival_item.enable == enable
+    assert festival_item.order_sn == order_sn
+    assert list(festival_item.festival_name.all()) == festival_name_instances
+    assert list(festival_item.product_id.all()) == product_id_instances
+    assert list(festival_item.source.all()) == source_instances
+    assert festival_item.create_time is not None
+    assert festival_item.update_time is not None
