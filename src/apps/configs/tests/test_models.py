@@ -1,5 +1,4 @@
 import pytest
-from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.utils import timezone
 
@@ -9,7 +8,8 @@ from apps.configs.models import (
     Source,
     Config,
     AbstractProduct,
-    FestivalName
+    FestivalName,
+    Festival,
 )
 
 
@@ -345,3 +345,37 @@ def test_festival_name_creation(test_id, name, lunar_month, lunar_day, enable):
     assert festival.enable == enable
     assert festival.update_time is None or festival.update_time <= timezone.now()
     assert festival.create_time is not None and festival.create_time <= timezone.now()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("roc_year, festival_name, enable, expected_str", [
+    # ID: Happy Path 1
+    (110, 'Mid-Autumn Festival', True, '110_Mid-Autumn Festival'),
+    # ID: Happy Path 2
+    (111, 'Dragon Boat Festival', False, '111_Dragon Boat Festival'),
+    # ID: Edge Case 1 (Boundary year value)
+    (1, 'Lantern Festival', True, '1_Lantern Festival'),
+    # ID: Edge Case 2 (Empty festival name)
+    (112, '', True, '112_'),
+    # ID: Error Case 1 (Year as string)
+    ('One Hundred', 'Qixi Festival', True, UnboundLocalError),
+    # ID: Error Case 2 (Invalid boolean for enable)
+    (113, 'Qingming Festival', 'yes', UnboundLocalError),
+], ids=["happy-path-1", "happy-path-2", "edge-case-1", "edge-case-2", "error-case-1", "error-case-2"])
+def test_festival_str(roc_year, festival_name, enable, expected_str):
+    # Arrange
+    if isinstance(roc_year, int) and isinstance(enable, bool):
+        festival_name_obj, _ = FestivalName.objects.get_or_create(name=festival_name)
+        festival = Festival(roc_year=str(roc_year), name=festival_name_obj, enable=enable)
+
+    # Act
+    if isinstance(expected_str, type) and issubclass(expected_str, Exception):
+        with pytest.raises(expected_str):
+            festival.save()
+    else:
+        festival.save()
+        result_str = str(festival)
+
+    # Assert
+    if not isinstance(expected_str, type):
+        assert result_str == expected_str
