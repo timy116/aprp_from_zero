@@ -314,3 +314,24 @@ class FestivalName(Model):
 
     def __unicode__(self):
         return str(self.name)
+
+
+class FestivalItems(Model):
+    name = CharField(max_length=20, verbose_name=_('Name'))
+    enable = BooleanField(default=True, verbose_name=_('Enabled'))
+    order_sn = IntegerField(default=9, verbose_name=_('Order SN'))
+    festival_name = ManyToManyField('configs.FestivalName', verbose_name=_('Festival Name'))
+    product_id = ManyToManyField('configs.AbstractProduct', verbose_name=_('Product ID'))
+    source = ManyToManyField('configs.Source', verbose_name=_('Source'))
+    update_time = DateTimeField(auto_now=True, null=True, blank=True, verbose_name=_('Updated'))
+    created_time = DateTimeField(auto_now_add=True, null=True, blank=True, verbose_name=_('Created'))
+
+    class Meta:
+        verbose_name = _('Festal Item')
+        ordering = ('order_sn',)
+
+    def __str__(self):
+        return str(self.name)
+
+    def __unicode__(self):
+        return str(self.name)
