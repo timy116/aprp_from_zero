@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Model, DateTimeField, ManyToManyField, ForeignKey, SET_NULL, Q
 from django.db.models.fields import CharField, IntegerField, BooleanField
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from model_utils.managers import InheritanceManager
 
@@ -253,6 +254,58 @@ class Chart(Model):
     class Meta:
         verbose_name = _('Chart')
         verbose_name_plural = _('Charts')
+
+    def __str__(self):
+        return str(self.name)
+
+    def __unicode__(self):
+        return str(self.name)
+
+
+class Month(Model):
+    name = CharField(max_length=120, unique=True, verbose_name=_('Name'))
+
+    class Meta:
+        verbose_name = _('Month')
+        verbose_name_plural = _('Months')
+
+    def __str__(self):
+        return str(self.name)
+
+    def __unicode__(self):
+        return str(self.name)
+
+
+class Festival(Model):
+    roc_year = CharField(max_length=3, default=timezone.now().year - 1911, verbose_name='ROC Year')
+    name = ForeignKey('configs.FestivalName', null=True, blank=True, on_delete=SET_NULL, verbose_name=_('Name'))
+    enable = BooleanField(default=True, verbose_name=_('Enabled'))
+    update_time = DateTimeField(auto_now=True, null=True, blank=True, verbose_name=_('Updated'))
+    create_time = DateTimeField(auto_now_add=True, null=True, blank=True, verbose_name=_('Created'))
+
+    class Meta:
+        verbose_name = _('Festival')
+        verbose_name_plural = _('Festivals')
+        ordering = ('id',)
+
+    def __str__(self):
+        return f"{self.roc_year}_{self.name.name}"
+
+    def __unicode__(self):
+        return f"{self.roc_year}_{self.name.name}"
+
+
+class FestivalName(Model):
+    name = CharField(max_length=20, unique=True, verbose_name=_('Name'))
+    enable = BooleanField(default=True, verbose_name=_('Enabled'))
+    lunar_month = CharField(max_length=2, default='01', verbose_name=_('Lunar Month'))
+    lunar_day = CharField(max_length=2, default='01', verbose_name=_('Lunar Day'))
+    update_time = DateTimeField(auto_now=True, null=True, blank=True, verbose_name=_('Updated'))
+    create_time = DateTimeField(auto_now_add=True, null=True, blank=True, verbose_name=_('Created'))
+
+    class Meta:
+        verbose_name = _('Festival Name')
+        ordering = ('id',)
 
     def __str__(self):
         return str(self.name)
