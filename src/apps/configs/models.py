@@ -327,8 +327,26 @@ class FestivalItems(Model):
     create_time = DateTimeField(auto_now_add=True, null=True, blank=True, verbose_name=_('Created'))
 
     class Meta:
-        verbose_name = _('Festal Item')
+        verbose_name = _('Festival Item')
         ordering = ('order_sn',)
+
+    def __str__(self):
+        return str(self.name)
+
+    def __unicode__(self):
+        return str(self.name)
+
+
+class Last5YearsItems(Model):
+    name = CharField(max_length=60, verbose_name=_('Name'))
+    enable = BooleanField(default=True, verbose_name=_('Enabled'))
+    product_id = ManyToManyField('configs.AbstractProduct', verbose_name=_('Product ID'))
+    source = ManyToManyField('configs.Source', verbose_name=_('Source'))
+    update_time = DateTimeField(auto_now=True, null=True, blank=True, verbose_name=_('Updated'))
+    create_time = DateTimeField(auto_now_add=True, null=True, blank=True, verbose_name=_('Created'))
+
+    class Meta:
+        verbose_name = _('Last5YearsItems')
 
     def __str__(self):
         return str(self.name)
