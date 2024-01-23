@@ -4,6 +4,7 @@ from django.db.models.fields import CharField, IntegerField, BooleanField
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from model_utils.managers import InheritanceManager
+from django.core.validators import MaxLengthValidator, MinValueValidator, MaxValueValidator
 
 
 class AbstractProduct(Model):
@@ -296,7 +297,8 @@ class Festival(Model):
 
 
 class FestivalName(Model):
-    name = CharField(max_length=20, unique=True, verbose_name=_('Name'))
+    name = CharField(max_length=20, unique=True, verbose_name=_('Name'),
+                     validators=[MaxLengthValidator(20, message='Name cannot exceed 20 characters')])
     enable = BooleanField(default=True, verbose_name=_('Enabled'))
     lunar_month = CharField(max_length=2, default='01', verbose_name=_('Lunar Month'))
     lunar_day = CharField(max_length=2, default='01', verbose_name=_('Lunar Day'))

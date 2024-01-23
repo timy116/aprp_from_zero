@@ -1,8 +1,16 @@
 import pytest
+from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.utils import timezone
 
-from apps.configs.models import Unit, Type, Source, Config, AbstractProduct
+from apps.configs.models import (
+    Unit,
+    Type,
+    Source,
+    Config,
+    AbstractProduct,
+    FestivalName
+)
 
 
 # Test __str__ method
@@ -299,3 +307,41 @@ class TestConfigModel:
 
         # Assert
         assert list(types.values_list('id', flat=True)) == expected_types
+
+
+# Test IDs for parametrization
+HAPPY_PATH_ID = "happy"
+EDGE_CASE_ID = "edge"
+ERROR_CASE_ID = "error"
+
+# Happy path test values
+happy_test_values = [
+    (HAPPY_PATH_ID, "New Year", "01", "01", True),
+    (HAPPY_PATH_ID, "Mid-Autumn", "08", "15", True),
+    (HAPPY_PATH_ID, "Dragon Boat", "05", "05", False),
+]
+
+# Edge case test values
+edge_test_values = [
+    (EDGE_CASE_ID, "A" * 20, "12", "30", True),  # Max length name
+    (EDGE_CASE_ID, "", "00", "00", False),  # Empty name and non-existent date
+]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("test_id, name, lunar_month, lunar_day, enable",
+                         happy_test_values + edge_test_values)
+def test_festival_name_creation(test_id, name, lunar_month, lunar_day, enable):
+    # Arrange
+    # (No arrange step needed as all values are provided by the test parameters)
+
+    # Act
+    festival = FestivalName.objects.create(name=name, lunar_month=lunar_month, lunar_day=lunar_day, enable=enable)
+
+    # Assert
+    assert festival.name == name
+    assert festival.lunar_month == lunar_month
+    assert festival.lunar_day == lunar_day
+    assert festival.enable == enable
+    assert festival.update_time is None or festival.update_time <= timezone.now()
+    assert festival.create_time is not None and festival.create_time <= timezone.now()
