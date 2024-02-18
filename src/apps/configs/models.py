@@ -8,6 +8,27 @@ from django.core.validators import MaxLengthValidator, MinValueValidator, MaxVal
 
 
 class AbstractProduct(Model):
+    """
+    Abstract classes here as AbstractProduct which inherit from third
+    party package model_utils.InheritanceManage, will not work with
+    abstract attribute specified true:
+
+        class Meta:
+            abstract = True
+
+    For this reason, its subclass will cause create issue when load
+    fixtures data by running this command:
+
+        manage.py loaddata <file-name>
+
+    So, we have to remove abstract attribute and add a custom manager
+
+    Note:
+    該命令的工作原理如下：
+    1. 該命令會讀取指定的文件。該文件必須是 JSON 或 YAML 格式的資料轉儲。
+    2. 該命令會解析文件中的資料。
+    3. 該命令會根據解析出的資料創建或更新資料庫中的模型實例。
+    """
     name = CharField(max_length=50, verbose_name=_('Name'))
     code = CharField(max_length=50, verbose_name=_('Code'))
     config = ForeignKey('configs.Config', null=True, on_delete=SET_NULL, verbose_name=_('Config'))
@@ -54,6 +75,34 @@ class AbstractProduct(Model):
                 lock = True
 
         return level
+
+    def children(self):
+        """
+        如果在 select_subclasses() 方法中指定了子類別，那麼實際上的 SQL 會使用 join。
+
+        e.g.
+        products = AbstractProduct.objects.select_subclasses('product').filter(price__gt=100)
+
+        該程式碼將生成以下 SQL 語句：
+        SELECT *
+        FROM
+        `django_content_type` AS `content_type`
+        INNER JOIN
+        `product` AS `product`
+        ON
+        `content_type`.`model` = `product`.`content_type_id`
+        WHERE
+        `product`.`price` > 100
+
+        補充說明:
+        如果不指定子類別，那麼 select_subclasses() 方法將包含所有子類別。這將導致 SQL 語句包含多個 JOIN 語句。
+        這可能會導致性能問題，因為每個 JOIN 都需要額外的時間。
+
+        如果你在子類別呼叫 select_subclasses() 方法，那麼實際上的 SQL 會使用 join，但只會包含該子類別及其子類別。
+        """
+        products = AbstractProduct.objects.filter(parent=self).select_subclasses()
+
+        return products.order_by('id')
 
     def children_all(self):
         q_object = Q()
