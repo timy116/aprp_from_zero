@@ -12,6 +12,12 @@ from apps.configs.models import (
     Festival,
     FestivalItems,
 )
+from tests.factories import (
+    ConfigFactory,
+    ChartFactory,
+    SourceFactory,
+    TypeFactory,
+)
 
 
 # Test __str__ method
@@ -142,6 +148,22 @@ class TestTypeModel:
 
 @pytest.mark.django_db
 class TestSourceModel:
+    @pytest.mark.parametrize(
+        "source_name, num_configs",
+        [
+            ("Source1", 1),
+            ("Source2", 2),
+        ],
+    )
+    def test_source_configs(self, source_name, num_configs):
+        source_instance = SourceFactory.create(name=source_name)
+
+        for _ in range(num_configs):
+            config_instance = ConfigFactory.create()
+            source_instance.configs.add(config_instance)
+
+        assert source_instance.configs.count() == num_configs
+
     # Happy path test for __str__ method
     @pytest.mark.parametrize(
         "source_name, config_names, type_name, expected_str",
@@ -250,23 +272,41 @@ def test_filter_by_name_error_cases(input_name, exception):
 
 @pytest.mark.django_db
 class TestConfigModel:
-    # Happy path test for __str__ method
     @pytest.mark.parametrize(
-        "test_id, name, code, expected_str",
+        "config_name,num_charts",
         [
-            ("HP-1", "Config1", "C1", "Config1"),  # ID: HP-1
-            ("HP-2", "Config2", None, "Config2"),  # ID: HP-2
+            ("Config 1", 1),
+            ("Config 2", 2),
         ],
     )
-    def test_str_method(self, test_id, name, code, expected_str):
+    def test_config_charts(self, config_name, num_charts):
+        config = ConfigFactory.create(
+            name=config_name
+        )
+
+        for _ in range(num_charts):
+            chart = ChartFactory.create()
+            config.charts.add(chart)
+
+        assert config.charts.count() == num_charts
+
+    # Happy path test for __str__ method
+    @pytest.mark.parametrize(
+        "test_id, name, code",
+        [
+            ("HP-1", "Config1", "C1"),  # ID: HP-1
+            ("HP-2", "Config2", "C2"),  # ID: HP-2
+        ],
+    )
+    def test_str_method(self, test_id, name, code):
         # Arrange
-        config = Config.objects.create(name=name, code=code)
+        config = ConfigFactory.create(name=name, code=code)
 
         # Act
         result = str(config)
 
         # Assert
-        assert result == expected_str
+        assert result == config.name
 
     # Happy path test for products method
     @pytest.mark.parametrize(
