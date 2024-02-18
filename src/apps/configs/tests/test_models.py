@@ -151,18 +151,73 @@ class TestSourceModel:
     @pytest.mark.parametrize(
         "source_name, num_configs",
         [
-            ("Source1", 1),
-            ("Source2", 2),
+            ("Source1", 2),
+            ("Source2", 3),
         ],
     )
     def test_source_configs(self, source_name, num_configs):
+        # Arrange
         source_instance = SourceFactory.create(name=source_name)
+        config_instances = [ConfigFactory.create() for _ in range(num_configs)]
 
-        for _ in range(num_configs):
-            config_instance = ConfigFactory.create()
-            source_instance.configs.add(config_instance)
-
+        # Add the configs to the source
+        source_instance.configs.add(*config_instances)
         assert source_instance.configs.count() == num_configs
+
+        # Remove the config from the source
+        config_instance = config_instances.pop()
+        source_instance.configs.remove(config_instance)
+        assert source_instance.configs.count() == num_configs - 1
+
+        # Check reverse relationship
+        configs = Config.objects.filter(source__name=source_name)
+        assert configs.count() == num_configs - 1
+
+        # Check filter condition
+        config_instance = config_instances.pop()
+        filtered_configs = Config.objects.filter(source__name=source_name, name=config_instance.name)
+        assert filtered_configs.count() == 1
+
+        # Check reverse query
+        source_instance = Source.objects.get(name=source_name)
+        configs = source_instance.configs.all()
+        assert configs.count() == num_configs - 1
+
+        # Check get source instance by config name
+        source_instance = Source.objects.filter(configs__name=config_instance.name)
+        assert source_instance.count() == 1
+
+    @pytest.mark.parametrize(
+        "source_name",
+        [
+            "Source1",
+            "Source2",
+        ],
+    )
+    def test_source_type(self, source_name):
+        source_instance = SourceFactory.create(name=source_name)
+        type_instance = TypeFactory.create()
+        source_instance.type = type_instance
+        source_instance.save()
+
+        assert source_instance.type == type_instance
+
+        """
+        SELECT
+            "source"."id",
+            "source"."name",
+            "source"."alias",
+            "source"."code",
+            "type"."id",
+            "type"."name"
+        FROM "configs_source" AS "source"
+        LEFT JOIN "configs_type" AS "type" ON ("source"."type_id" = "type"."id")
+        WHERE "source"."name" = 'Source1'
+        """
+        source_with_type = Source.objects.select_related('type').get(name=source_name)
+
+        assert source_with_type.type is not None
+        assert source_with_type.type.name == type_instance.name
 
     # Happy path test for __str__ method
     @pytest.mark.parametrize(
@@ -175,11 +230,10 @@ class TestSourceModel:
     )
     def test_str_method(self, source_name, config_names, type_name, expected_str):
         # Arrange
-        type_instance = Type.objects.create(name=type_name)
-        source_instance = Source.objects.create(name=source_name, type=type_instance)
-        for config_name in config_names:
-            config_instance = Config.objects.create(name=config_name)
-            source_instance.configs.add(config_instance)
+        type_instance = TypeFactory.create(name=type_name)
+        source_instance = SourceFactory.create(name=source_name, type=type_instance)
+        config_instances = [ConfigFactory.create(name=config_name) for config_name in config_names]
+        source_instance.configs.add(*config_instances)
 
         # Act
         result = str(source_instance)
@@ -197,7 +251,7 @@ class TestSourceModel:
     )
     def test_simple_name_property(self, source_name, expected_simple_name):
         # Arrange
-        source_instance = Source.objects.create(name=source_name)
+        source_instance = SourceFactory.create(name=source_name)
 
         # Act
         result = source_instance.simple_name
@@ -216,10 +270,9 @@ class TestSourceModel:
     )
     def test_configs_flat_property(self, config_names, expected_flat):
         # Arrange
-        source_instance = Source.objects.create(name="TestSource")
-        for config_name in config_names:
-            config_instance = Config.objects.create(name=config_name)
-            source_instance.configs.add(config_instance)
+        source_instance = SourceFactory.create(name="TestSource")
+        config_instances = [ConfigFactory.create(name=config_name) for config_name in config_names]
+        source_instance.configs.add(*config_instances)
 
         # Act
         result = source_instance.configs_flat
@@ -230,7 +283,7 @@ class TestSourceModel:
     # Happy path test for to_direct property
     def test_to_direct_property(self):
         # Arrange
-        source_instance = Source.objects.create(name="TestSource")
+        source_instance = SourceFactory.create(name="TestSource")
 
         # Act
         result = source_instance.to_direct
