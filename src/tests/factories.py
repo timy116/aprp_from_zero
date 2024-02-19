@@ -1,9 +1,25 @@
 import threading
 
 import factory
-from factory import Faker, post_generation
+from factory import Faker
 from factory.django import DjangoModelFactory
-from apps.configs.models import Config, Chart, Last5YearsItems, Type, Source
+
+from apps.configs.models import (
+    Config,
+    Chart,
+    Last5YearsItems,
+    Type,
+    Source,
+    Unit
+)
+
+
+class UnitFactory(DjangoModelFactory):
+    class Meta:
+        model = Unit
+
+    price_unit = Faker('currency_name')
+    volume_unit = Faker('word')
 
 
 class BaseFactory(DjangoModelFactory):

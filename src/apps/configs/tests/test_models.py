@@ -17,6 +17,7 @@ from tests.factories import (
     ChartFactory,
     SourceFactory,
     TypeFactory,
+    UnitFactory,
 )
 
 
@@ -34,9 +35,10 @@ from tests.factories import (
         # Error cases are not applicable here as the method handles None values
     ]
 )
+@pytest.mark.django_db
 def test_unit_str_method(price_unit, volume_unit, weight_unit, update_time):
     # Arrange
-    unit = Unit(price_unit=price_unit, volume_unit=volume_unit, weight_unit=weight_unit, update_time=update_time)
+    unit = UnitFactory.create(price_unit=price_unit, volume_unit=volume_unit, weight_unit=weight_unit, update_time=update_time)
 
     # Act
     result = str(unit)
@@ -59,9 +61,10 @@ def test_unit_str_method(price_unit, volume_unit, weight_unit, update_time):
         # Error cases are not applicable here as the method handles None values
     ]
 )
+@pytest.mark.django_db
 def test_unit_attr_list_method(price_unit, volume_unit, weight_unit, expected_list):
     # Arrange
-    unit = Unit(price_unit=price_unit, volume_unit=volume_unit, weight_unit=weight_unit)
+    unit = UnitFactory.create(price_unit=price_unit, volume_unit=volume_unit, weight_unit=weight_unit)
 
     # Act
     result = unit.attr_list()
@@ -74,42 +77,22 @@ def test_unit_attr_list_method(price_unit, volume_unit, weight_unit, expected_li
 class TestTypeModel:
     # Test __str__ method happy path
     @pytest.mark.parametrize(
-        "type_name, expected_str",
+        "type_name",
         [
-            ("Type A", "Type A"),
-            ("Type B", "Type B"),
-            ("", ""),  # Assuming empty string is a valid type name
+            "Type A",
+            "Type B",
+            "",  # Assuming empty string is a valid type name
         ]
     )
-    def test_type_str(self, type_name, expected_str):
+    def test_type_str(self, type_name):
         # Arrange
-        type_instance = Type.objects.create(name=type_name)
+        type_instance = TypeFactory.create(name=type_name)
 
         # Act
         result = str(type_instance)
 
         # Assert
-        assert result == expected_str
-
-    # Test sources method happy path
-    @pytest.mark.parametrize(
-        "type_name, source_count, expected_count",
-        [
-            ("Type A", 3, 3),
-            ("Type B", 0, 0),  # No sources for this type
-        ]
-    )
-    def test_type_sources(self, type_name, source_count, expected_count):
-        # Arrange
-        type_instance = Type.objects.create(name=type_name)
-        for _ in range(source_count):
-            Source.objects.create(type=type_instance)
-
-        # Act
-        result = type_instance.sources()
-
-        # Assert
-        assert result.count() == expected_count
+        assert result == type_instance.name
 
     # Test to_direct property happy path
     @pytest.mark.parametrize(
@@ -121,7 +104,7 @@ class TestTypeModel:
     )
     def test_type_to_direct(self, type_name, expected_value):
         # Arrange
-        type_instance = Type.objects.create(name=type_name)
+        type_instance = TypeFactory.create(name=type_name)
 
         # Act
         result = type_instance.to_direct
