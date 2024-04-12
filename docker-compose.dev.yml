@@ -1,0 +1,107 @@
+version: '3.9'
+
+services:
+  postgres:
+    container_name: db
+    image: postgres:10-alpine
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_HOST=localhost
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - aprp
+
+  pgadmin:
+    container_name: aprp_pgadmin
+    image: dpage/pgadmin4:8.3
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pg-admin:/root/.pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      - aprp
+    restart: unless-stopped
+
+  redis:
+    container_name: redis
+    hostname: redis
+    image: redis:4.0
+    volumes:
+      - redis-data:/data
+    networks:
+      - aprp
+
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: ghcr.io/joeferner/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8085:8081"
+    depends_on:
+      - "redis"
+    networks:
+      - aprp
+    restart: always
+
+  web: &web
+    container_name: web
+    build:
+      context: .
+      target: dev
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./src:/app
+    entrypoint: ./scripts/entrypoint.sh
+    command:
+      - "python"
+      - "manage.py"
+      - "runserver"
+      - "0.0.0.0:8000"
+    networks:
+        - aprp
+
+  worker:
+    <<: *web
+    container_name: worker
+    depends_on:
+      - web
+    ports: [ ]
+    command: [ "celery", "worker", "--app=dashboard", "--pool=eventlet", "--loglevel=info" ]
+    entrypoint: ./scripts/entrypoint.sh
+
+  beat:
+    <<: *web
+    container_name: beat
+    depends_on:
+      - web
+    ports: [ ]
+    command: [ "celery", "beat", "--app=dashboard", "--loglevel=info", "--pidfile=/opt/celeryd.pid" ]
+    entrypoint: ./scripts/entrypoint.sh
+
+volumes:
+  pg-data:
+  redis-data:
+  pg-admin:
+
+
+networks:
+  aprp:
+    driver: bridge
