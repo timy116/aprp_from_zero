@@ -2,3 +2,11 @@ django==1.9.13
 django-environ==0.4.5
 django-model-utils==3.0.0
 psycopg2==2.7.3.2
+
+# Celery dependencies
+celery==4.1.0
+redis==2.10.6
+django-celery-beat==1.1.1
+django-celery-results==1.0.1
+eventlet==0.22.1
+kombu==4.1.0
