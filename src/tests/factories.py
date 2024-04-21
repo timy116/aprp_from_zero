@@ -1,7 +1,7 @@
 import threading
 
 import factory
-from factory import Faker
+from factory import Faker, RelatedFactory
 from factory.django import DjangoModelFactory
 
 from apps.configs.models import (
@@ -10,13 +10,12 @@ from apps.configs.models import (
     Last5YearsItems,
     Type,
     Source,
-    Unit
 )
 
 
 class UnitFactory(DjangoModelFactory):
     class Meta:
-        model = Unit
+        model = "configs.Unit"
 
     price_unit = Faker('currency_name')
     volume_unit = Faker('word')
@@ -52,6 +51,18 @@ class SourceFactory(BaseFactory):
     name = Faker('name')
     alias = Faker('word')
     code = Faker('word')
+    type = factory.SubFactory("tests.factories.TypeFactory")
+
+    @factory.post_generation
+    def configs(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for config in extracted:
+                self.configs.add(config)
+        else:
+            self.configs.add(ConfigFactory())
 
 
 class ChartFactory(BaseFactory):

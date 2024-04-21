@@ -368,8 +368,8 @@ class TestConfigModel:
     @pytest.mark.parametrize(
         "test_id, config_name, type_name, type_count, expected_types",
         [
-            ("HP-1", "Config1", "Type", 3, [1, 2, 3]),  # ID: HP-1
-            ("HP-2", "Config2", "Type", 2, [1, 2]),  # ID: HP-2
+            ("HP-1", "Config1", "Type", 3, [15, 16, 17]),  # ID: HP-1
+            ("HP-2", "Config2", "Type", 2, [18, 19]),  # ID: HP-2
         ],
     )
     def test_types(self, test_id, config_name, type_name, type_count, expected_types):
