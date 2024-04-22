@@ -82,7 +82,7 @@ down-dev:
 
 ## test web service
 test:
-	docker-compose -f docker-compose.dev.yml run --rm ${DJANGO_SERVICE_NAME} pytest
+	docker-compose -f docker-compose.dev.yml run --rm ${DJANGO_SERVICE_NAME} pytest -v
 
 ## make migrations in web service
 migrate:
