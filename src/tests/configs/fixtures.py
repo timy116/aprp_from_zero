@@ -1,6 +1,15 @@
 import pytest
 
-from tests.factories import UnitFactory, TypeFactory, ConfigFactory, SourceFactory
+from tests.configs.factories import (
+    UnitFactory,
+    TypeFactory,
+    ConfigFactory,
+    SourceFactory,
+    ChartFactory,
+    MonthFactory,
+    FestivalNameFactory,
+    FestivalFactory,
+)
 
 
 @pytest.fixture
@@ -27,13 +36,18 @@ def type_instance():
 
 
 @pytest.fixture
-def config():
-    return ConfigFactory()
+def config(chart):
+    return ConfigFactory(charts=[chart])
 
 
 @pytest.fixture
 def configs():
     return ConfigFactory.create_batch(3)
+
+
+@pytest.fixture
+def config_with_charts(charts):
+    return ConfigFactory(charts=charts)
 
 
 @pytest.fixture
@@ -59,3 +73,33 @@ def source_with_configs(configs):
 @pytest.fixture
 def source_with_type(type_instance):
     return SourceFactory(type=type_instance)
+
+
+@pytest.fixture
+def chart():
+    return ChartFactory()
+
+
+@pytest.fixture
+def charts():
+    return ChartFactory.create_batch(3)
+
+
+@pytest.fixture
+def month():
+    return MonthFactory()
+
+
+@pytest.fixture
+def festival_name():
+    return FestivalNameFactory()
+
+
+@pytest.fixture
+def festival_names():
+    return FestivalNameFactory.create_batch(3)
+
+
+@pytest.fixture
+def festival(festival_name):
+    return FestivalFactory(name=festival_name)
