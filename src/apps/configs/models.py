@@ -113,6 +113,22 @@ class AbstractProduct(Model):
 
         return AbstractProduct.objects.filter(q_object).select_subclasses().order_by('id')
 
+    @property
+    def related_product_ids(self):
+        ids = list(self.children().values_list('id', flat=True))
+
+        lock = False
+        product = self
+
+        while not lock:
+            ids.append(product.id)
+            if product.parent is not None:
+                product = product.parent
+            else:
+                lock = True
+
+        return ids
+
 
 class SourceQuerySet(models.QuerySet):
     """ for case like Source.objects.filter(config=config).filter_by_name(name) """

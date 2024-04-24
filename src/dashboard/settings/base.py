@@ -42,7 +42,8 @@ INSTALLED_APPS = [
 
     # Local apps
     'dashboard',
-    'apps.configs'
+    'apps.configs',
+    'apps.watchlists',
 ]
 
 MIDDLEWARE_CLASSES = [
