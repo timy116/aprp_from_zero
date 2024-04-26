@@ -19,7 +19,6 @@ from django.db.models import (
 from django.utils.translation import ugettext_lazy as _
 from apps.configs.models import Config, AbstractProduct
 
-
 COMPARATOR_CHOICES = [
     ('__lt__', _('<')),
     ('__lte__', _('<=')),
@@ -95,6 +94,7 @@ class Watchlist(Model):
 
 class WatchlistItemQuerySet(QuerySet):
     """ for case like WatchlistItem.objects.filter(parent=self).filter_by_product(product__id=1) """
+
     def filter_by_product(self, **kwargs):
         product = kwargs.get('product') or AbstractProduct.objects.filter(id=kwargs.get('product__id')).first()
 
@@ -108,13 +108,15 @@ class WatchlistItemQuerySet(QuerySet):
             )
 
         return self.none()
-    """
-    for case like QuerySet.get_unit()
-    if QuerySet products has multiple types, search for parent unit by config.type_level
-    if single type, return first product unit
-    limit: same type of products(in single product chain) only support same unit
-    """
+
     def get_unit(self):
+        """
+        for case like QuerySet.get_unit()
+        if QuerySet products has multiple types, search for parent unit by config.type_level
+        if single type, return first product unit
+        limit: same type of products(in single product chain) only support same unit
+        """
+
         config = self.first().product.config
         if self.values('product__type').count() <= 0:
             return self.first().unit

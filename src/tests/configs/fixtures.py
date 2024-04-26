@@ -109,6 +109,11 @@ def source(config, type_instance):
 
 
 @pytest.fixture
+def sources():
+    return SourceFactory.create_batch(3)
+
+
+@pytest.fixture
 def source_with_null_values():
     return SourceFactory(
         name="台北一",
