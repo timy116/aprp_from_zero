@@ -60,6 +60,14 @@ class AbstractProduct(Model):
         return self.level >= type_level
 
     @property
+    def has_source(self):
+        return self.sources().count() > 0
+
+    @property
+    def has_child(self):
+        return self.children().count() > 0
+    
+    @property
     def level(self):
         level = 1
 
@@ -76,7 +84,7 @@ class AbstractProduct(Model):
 
         return level
 
-    def children(self):
+    def children(self, watchlist=None):
         """
         如果在 select_subclasses() 方法中指定了子類別，那麼實際上的 SQL 會使用 join。
 
@@ -101,6 +109,9 @@ class AbstractProduct(Model):
         如果你在子類別呼叫 select_subclasses() 方法，那麼實際上的 SQL 會使用 join，但只會包含該子類別及其子類別。
         """
         products = AbstractProduct.objects.filter(parent=self).select_subclasses()
+        
+        if watchlist and not watchlist.watch_all:
+            products = products.filter(id__in=watchlist.related_product_ids)
 
         return products.order_by('id')
 
@@ -112,7 +123,25 @@ class AbstractProduct(Model):
             parent_attr += '__parent'
 
         return AbstractProduct.objects.filter(q_object).select_subclasses().order_by('id')
+    
+    def types(self, watchlist=None):
+        if self.has_child:
+            products = self.children()
+            if watchlist and not watchlist.watch_all:
+                products = products.filter(id__in=watchlist.related_product_ids)
+            type_ids = products.values_list('type__id', flat=True)
+            return Type.objects.filter(id__in=type_ids)
+        elif self.type:
+            return Type.objects.filter(id=self.type.id)
+        else:
+            return self.objects.none()
 
+    def sources(self, watchlist=None):
+        if watchlist:
+            return watchlist.children().filter(product__id=self.id).first().sources.all()
+        else:
+            return Source.objects.filter(configs__id__exact=self.config.id).filter(type=self.type).order_by('id')
+    
     @property
     def related_product_ids(self):
         ids = list(self.children().values_list('id', flat=True))
