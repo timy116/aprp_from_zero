@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'dashboard',
     'apps.configs',
     'apps.watchlists',
+    'apps.dailytrans',
 ]
 
 MIDDLEWARE_CLASSES = [
