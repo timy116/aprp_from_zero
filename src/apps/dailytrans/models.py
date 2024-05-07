@@ -20,7 +20,7 @@ class DailyTranQuerySet(QuerySet):
         kwargs['update_time'] = timezone.now()
         super(DailyTranQuerySet, self).update(*args, **kwargs)
 
-    def between_month_day_filter(self, start_date=None, end_date=None):
+    def between_month_day_filter(self, start_date: datetime.date = None, end_date: datetime.date = None):
         if not start_date or not end_date:
             return self
         date_ranges = []
