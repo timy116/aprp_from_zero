@@ -180,7 +180,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
 
-LANGUAGE_CODE = 'zh-hant'
+LANGUAGE_CODE = 'zh_Hant'
 
 # Local time zone for this installation. All choices can be found here:
 # https://en.wikipedia.org/wiki/List_of_tz_zones_by_name (although not all
@@ -194,7 +194,7 @@ USE_TZ = True
 
 # Languages we provide translations for, out of the box.
 LANGUAGES = [
-    ('zh-hant', _('Traditional Chinese')),
+    ('zh_Hant', _('Traditional Chinese')),
     ('en', _('English')),
 ]
 

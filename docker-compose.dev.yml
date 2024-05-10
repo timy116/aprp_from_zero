@@ -68,6 +68,9 @@ services:
       - JUPYTER_ALLOW_INSECURE_WRITES=1
       - REDIS_HOST=redis
       - PID_FILE=/opt/celeryd.pid
+      # If we do not set the variable, the django-admin will not be able to find the settings file
+      # and will raise the ModuleNotFoundError exception.
+      - PYTHONPATH=/app
     ports:
       - "8000:8000"
     depends_on:

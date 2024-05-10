@@ -89,6 +89,18 @@ migrate:
 	docker-compose -f docker-compose.dev.yml exec ${DJANGO_SERVICE_NAME} python manage.py makemigrations
 	docker-compose -f docker-compose.dev.yml exec ${DJANGO_SERVICE_NAME} python manage.py migrate
 
+## create i18n messages in web service
+locale:
+	docker-compose -f docker-compose.dev.yml exec ${DJANGO_SERVICE_NAME} python manage.py makemessages -l zh_Hant
+
+## update i18n messages in web service
+make-messages:
+	docker-compose -f docker-compose.dev.yml exec ${DJANGO_SERVICE_NAME} django-admin makemessages
+
+## compile i18n messages in web service
+compile-messages:
+	docker-compose -f docker-compose.dev.yml exec ${DJANGO_SERVICE_NAME} django-admin compilemessages
+
 ## run pytest-cov with web service
 pytest-cov:
 	docker-compose run ${DJANGO_SERVICE_NAME} pytest --cov-report html --cov=.
