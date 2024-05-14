@@ -1,0 +1,115 @@
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+</head>
+<body>
+<div id="app" @vue:mounted="mounted">
+	<div v-if="!loaded">Waiting for data...</div>
+	<div v-else>
+		<input type="text" v-model="searchString" v-on:keyup.enter="search">
+		<button @click="search">Search</button>
+		<table>
+			<thead>
+			<th @click="setSortColumn('name')">Name</th>
+			<th @click="setSortColumn('position')">Position</th>
+			<th @click="setSortColumn('office')">Office</th>
+			<th @click="setSortColumn('age')">Age</th>
+			</thead>
+			<tbody>
+			<tbody>
+			<tr v-for="worker in filteredWorkers">
+				<td>[[ worker.name ]]</td>
+				<td></td>
+				<td>[[ worker.position ]]</td>
+				<td>[[ worker.office ]]</td>
+				<td>[[ worker.age ]]</td>
+			</tr>
+			</tbody>
+			</tbody>
+		</table>
+	</div>
+</div>
+
+<script type="module">
+    import {createApp} from "../../../static/vendor/js/petite-vue.es.js";
+
+    async function getWorkers() {
+        const workers = [
+            {name: "Airi Satou", position: "Accountant", office: "Tokyo", age: 33},
+            {name: "Angelica Ramos", position: "Chief Executive Officer (CEO)", office: "London", age: 47},
+            {name: "Cedric Kelly", position: "Senior Javascript Developer", office: "Edinburgh", age: 22},
+            {name: "Jennifer Chang", position: "Regional Director", office: "Singapore", age: 28},
+        ];
+        this.loaded = true;
+        return workers;
+    }
+
+    function search() {
+        this.filteredWorkers = this.searchString === ""
+            ? this.workers
+            : this.workers.filter(wo => Object.values(wo).join("").indexOf(this.searchString) !== -1);
+
+        const column = this.sortColumn
+        const order = this.order;
+
+        this.filteredWorkers.sort(function (a, b) {
+            var nameA = a[column] + "".toUpperCase();
+            var nameB = b[column] + "".toUpperCase();
+            if (order === "DESC" && nameA > nameB) {
+                return -1;
+            }
+            if (order === "DESC" && nameA < nameB) {
+                return 1;
+            }
+            if (nameA < nameB) {
+                return -1;
+            }
+            if (nameA > nameB) {
+                return 1;
+            }
+            return 0;
+        });
+    }
+
+    function setSortColumn(key) {
+        if (this.sortColumn === key) {
+            if (this.order === 'ASC') {
+                this.order = 'DESC';
+            } else {
+                this.order = 'ASC';
+            }
+        } else {
+            this.order = 'ASC';
+        }
+
+        this.sortColumn = key;
+        this.search();
+    }
+
+    async function mounted() {
+        this.workers = await this.getWorkers();
+        this.filteredWorkers = this.workers;
+    }
+
+    createApp({
+        $delimiters: ['[[', ']]'],
+        searchString: "",
+        search,
+        filteredWorkers: [],
+
+        sortColumn: "",
+        order: "ASC",
+        setSortColumn,
+
+        getWorkers,
+        workers: [],
+        loaded: false,
+        mounted,
+    }).mount("#app");
+</script>
+</body>
+</html>

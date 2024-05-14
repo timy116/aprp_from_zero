@@ -106,6 +106,18 @@ services:
       - "manage.py"
       - "start_celery_beat"
 
+  flower:
+    container_name: flower
+    image: mher/flower
+    ports:
+      - "49555:5555"
+    networks:
+      - aprp
+    depends_on:
+      - worker
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/1
+
   notebook:
     <<: *web
     container_name: notebook

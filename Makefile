@@ -10,6 +10,7 @@ JUPYTER_NOTEBOOK_SERVICE_NAME = notebook
 MAIL_HOG_SERVICE_NAME = mailhog
 BEAT_SERVICE_NAME = beat
 WORKER_SERVICE_NAME = worker
+FLOWER_SERVICE_NAME = flower
 
 ## -- docker targets --
 
@@ -64,6 +65,10 @@ up-beat:
 ## run worker service
 up-worker:
 	docker-compose -f docker-compose.dev.yml up ${WORKER_SERVICE_NAME} -d
+
+## run flower service
+up-flower:
+	docker-compose -f docker-compose.dev.yml up ${FLOWER_SERVICE_NAME} -d
 
 ## run jupyter service
 up-jupyter:
