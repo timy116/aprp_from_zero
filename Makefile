@@ -52,6 +52,10 @@ up-redis-commander:
 up-web:
 	docker-compose -f docker-compose.dev.yml up ${DJANGO_SERVICE_NAME} -d
 
+## run web-prod service
+up-web-prod:
+	docker-compose -f docker-compose.prod.yml up web-prod -d
+
 
 ## run beat service
 up-beat:

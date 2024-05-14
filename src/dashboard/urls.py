@@ -7,7 +7,8 @@ from django.conf.urls.i18n import i18n_patterns
 from dashboard.views import Index
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
+    # url(r'^admin/', admin.site.urls),
+    url(r'^accounts/', include('apps.accounts.urls', namespace='accounts')),
 ]
 
 urlpatterns += i18n_patterns(

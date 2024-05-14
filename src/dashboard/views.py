@@ -4,7 +4,7 @@ from django.views.generic import TemplateView
 from utils.dashboard.utils import LoginRequiredMixin
 
 
-class Index(TemplateView):
+class Index(LoginRequiredMixin, TemplateView):
     redirect_field_name = 'redirect_to'
     template_name = 'index.html'
 

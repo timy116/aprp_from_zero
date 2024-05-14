@@ -14,7 +14,7 @@ env = environ.Env()
 SECRET_KEY = env.str('SECRET_KEY', 'my-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool('DEBUG', True)
+DEBUG = env.bool('DEBUG', False)
 
 ALLOWED_HOSTS = ['*']
 
@@ -137,9 +137,14 @@ STATICFILES_DIRS = [
     str(BASE_DIR('static'))
 ]
 
-STATIC_ROOT = str(BASE_DIR('static'))
+# STATIC_ROOT = str(BASE_DIR('static'))
 
 STATIC_URL = '/static/'
+
+
+# Login settings
+LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/accounts/login/'
 
 # Redis
 
