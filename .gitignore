@@ -120,3 +120,41 @@ ENV/
 
 # other
 celeryd.pid
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Customize directories and files
+src/App.vue
+HelloWorld.vue
+./index.html
+package.json
+package-lock.json
+public/
+vite.config.js
+extensions.json
+src/main.js
+src/assets/
+src/style.css
